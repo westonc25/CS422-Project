@@ -71,16 +71,28 @@ def create_features(df):
 
     return df
 
-def model_prep(df, target_col='Vol'):
-    """Prepare features (X) and target (y) for modeling."""
+
+def model_prep(train_df, test_df):
+    # Create target: predict NEXT 15-minute interval
+    train_df['target'] = train_df.groupby('SegmentID')['Vol'].shift(-1)
+    test_df['target']  = test_df.groupby('SegmentID')['Vol'].shift(-1)
     
-    # Columns to exclude from features
-    exclude_cols = ['date_time', 'Vol', 'SegmentID', 'street', 'fromSt', 'toSt']
+    # Drop rows where target is missing
+    train_df = train_df.dropna(subset=['target'])
+    test_df  = test_df.dropna(subset=['target'])
     
-    # Get feature columns
-    feature_cols = [col for col in df.columns if col not in exclude_cols]
+    # Define feature columns
+    exclude = ['date_time', 'Vol', 'SegmentID', 'target']
+    features = [col for col in train_df.columns if col not in exclude]
     
-    X = df[feature_cols]
-    y = df[target_col]
+    X_train = train_df[features]
+    X_test  = test_df[features]
+    y_train = train_df['target']
+    y_test  = test_df['target']
     
-    return X, y
+    print(f"Final dataset ready!")
+    print(f"   → Features: {len(features)}")
+    print(f"   → Train samples: {len(X_train):,}")
+    print(f"   → Test samples : {len(X_test):,}")
+    
+    return X_train, X_test, y_train, y_test
