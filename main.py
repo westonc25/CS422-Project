@@ -39,6 +39,7 @@ def split_data_by_date(df):
 
     return train_df, test_df
 
+
 def create_features(df):
     """Several feature engineering steps to enhance the dataset."""
     
@@ -63,5 +64,9 @@ def create_features(df):
     # Ecodes the SegmentID with its average historical volume
     segment_mean = df.groupby('SegmentID')['Vol'].mean()
     df['segment_avg_volume'] = df['SegmentID'].map(segment_mean)
+
+
+    #One-hot for random forest
+    df = pd.get_dummies(df, columns=['Boro', 'Direction'], drop_first=True)
 
     return df
