@@ -39,3 +39,24 @@ def split_data_by_date(df):
 
     return train_df, test_df
 
+def create_features(df):
+    """Several feature engineering steps to enhance the dataset."""
+    
+    # Time features
+    df['hour'] = df['date_time'].dt.hour
+    df['dayofweek'] = df['date_time'].dt.dayofweek      # 0 = Monday
+    df['month'] = df['date_time'].dt.month
+    df['is_weekend'] = df['dayofweek'] >= 5
+    df['is_rush_hour'] = df['hour'].isin([7,8,9,16,17,18]) & (~df['is_weekend'])
+
+    # Rolling statistics
+    rolls = [4, 8, 24, 96]  # last 1h, 2h, 6h, 24h
+    for window in rolls:
+        df[f'vol_roll_mean_{window}'] = df.groupby('SegmentID')['Vol'].transform(
+            lambda x: x.rolling(window=window, min_periods=1).mean())
+        df[f'vol_roll_std_{window}']  = df.groupby('SegmentID')['Vol'].transform(
+            lambda x: x.rolling(window=window, min_periods=1).std())
+        df[f'vol_roll_max_{window}']  = df.groupby('SegmentID')['Vol'].transform(
+            lambda x: x.rolling(window=window, min_periods=1).max())
+
+    return df
