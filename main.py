@@ -51,7 +51,7 @@ def create_features(df):
     df['is_rush_hour'] = df['hour'].isin([7,8,9,16,17,18]) & (~df['is_weekend'])
 
     # Rolling statistics
-    rolls = [4, 8, 24, 96]  # last 1h, 2h, 6h, 24h
+    rolls = [4, 8, 24]  # last 1h, 2h, 6h
     for window in rolls:
         df[f'vol_roll_mean_{window}'] = df.groupby('SegmentID')['Vol'].transform(
             lambda x: x.rolling(window=window, min_periods=1).mean())
@@ -70,3 +70,17 @@ def create_features(df):
     df = pd.get_dummies(df, columns=['Boro', 'Direction'], drop_first=True)
 
     return df
+
+def model_prep(df, target_col='Vol'):
+    """Prepare features (X) and target (y) for modeling."""
+    
+    # Columns to exclude from features
+    exclude_cols = ['date_time', 'Vol', 'SegmentID', 'street', 'fromSt', 'toSt']
+    
+    # Get feature columns
+    feature_cols = [col for col in df.columns if col not in exclude_cols]
+    
+    X = df[feature_cols]
+    y = df[target_col]
+    
+    return X, y
