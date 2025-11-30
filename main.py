@@ -58,5 +58,10 @@ def create_features(df):
             lambda x: x.rolling(window=window, min_periods=1).std())
         df[f'vol_roll_max_{window}']  = df.groupby('SegmentID')['Vol'].transform(
             lambda x: x.rolling(window=window, min_periods=1).max())
+        
+    # Location encoding
+    # Ecodes the SegmentID with its average historical volume
+    segment_mean = df.groupby('SegmentID')['Vol'].mean()
+    df['segment_avg_volume'] = df['SegmentID'].map(segment_mean)
 
     return df
