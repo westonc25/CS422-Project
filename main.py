@@ -111,6 +111,8 @@ def train_random_forest(X_train, y_train, trees):
     #Train the model with our datasets
     forest.fit(X_train, y_train)
 
+    return forest
+
 """
 Given the training datasets and a value for the C parameter 
 the function will train our model using random forest regression 
@@ -121,10 +123,12 @@ Different values of C allow us to analayze how regularization is taking place
 def train_logistic_regression(X_train, y_train, c_parameter):
 
     #Load the training function
-    model = LogisticRegression(c = c_parameter)
+    logreg = LogisticRegression(c = c_parameter)
 
     #Train the model with our datasets
-    model.fit(X_train, y_train)
+    logreg.fit(X_train, y_train)
+
+    return logreg
 
 """
 We can add more models to evaluate if we want. Maybe like 1-2 more.
@@ -132,10 +136,9 @@ We can add more models to evaluate if we want. Maybe like 1-2 more.
 """
 
 
-
-
 """
-Prediction Functions
-
+Based on the model that is passed to the function along with the testing dataset this function should make predictions. 
 """
+def predictions(model, X_test):
 
+    return model.predict(X_test)
