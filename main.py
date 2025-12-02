@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
 import matplotlib.pyplot as plt
 from datetime import datetime as dt
@@ -96,3 +97,45 @@ def model_prep(train_df, test_df):
     print(f"   → Test samples : {len(X_test):,}")
     
     return X_train, X_test, y_train, y_test
+
+"""
+Given the training datasets and a value for how many trees we want to construct
+the function will train our model using random forest regression. 
+
+"""
+def train_random_forest(X_train, y_train, trees):
+
+    #Load the training function
+    forest = RandomForestRegressor(n_estimators = trees, random_state = 3)
+
+    #Train the model with our datasets
+    forest.fit(X_train, y_train)
+
+"""
+Given the training datasets and a value for the C parameter 
+the function will train our model using random forest regression 
+
+Different values of C allow us to analayze how regularization is taking place
+
+"""
+def train_logistic_regression(X_train, y_train, c_parameter):
+
+    #Load the training function
+    model = LogisticRegression(c = c_parameter)
+
+    #Train the model with our datasets
+    model.fit(X_train, y_train)
+
+"""
+We can add more models to evaluate if we want. Maybe like 1-2 more.
+
+"""
+
+
+
+
+"""
+Prediction Functions
+
+"""
+
