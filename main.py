@@ -142,3 +142,39 @@ Based on the model that is passed to the function along with the testing dataset
 def predictions(model, X_test):
 
     return model.predict(X_test)
+
+"""
+Main
+
+"""
+
+def main():
+
+    # We first need to load the data in for preprocessing
+    print("Data is being loaded!")
+    df = load_data()
+
+    # Now we can split the data in order to prepare it for training and testing
+    print("Data is now being split")
+    train_df, test_df = split_data_by_date(df)
+
+    # Apply feature engineering steps in order to enhance the dataset
+    train_df = create_features(train_df)
+    test_df = create_features(test_df)
+
+    # Prepare data for model training
+    X_train, X_test, y_train, y_test = model_prep(train_df, test_df)
+
+    """
+    Now that the data has been processed and prepared we can move on to conducting our experiments 
+    """
+    # Train, predict and analyze a random forest model
+    print("Now training Random forest model")
+    rf_model = train_random_forest(X_train, y_train)
+    rf_pred = predictions(rf_model, X_test)
+
+    # Train, predict and analyze a logistic regression model
+    print("Now training Logistic regression model")
+    lr_model = train_logistic_regression(X_train, y_train)
+    lr_pred = predictions(lr_model, X_test)
+    
