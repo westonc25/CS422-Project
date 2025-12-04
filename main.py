@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 from datetime import datetime as dt
 
@@ -135,13 +136,26 @@ We can add more models to evaluate if we want. Maybe like 1-2 more.
 
 """
 
-
 """
 Based on the model that is passed to the function along with the testing dataset this function should make predictions. 
 """
 def predictions(model, X_test):
 
     return model.predict(X_test)
+
+def evaluate_model(y_test, y_pred, model_name = "Model"):
+
+    mae = mean_absolute_error(y_test, y_pred)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    r2 = r2_score(y_test, y_pred) 
+
+    print(f"\n{model_name} Performance:")
+    print(f" MAE: {mae:.2f} vehicles")
+    print(f" RMSE: {rmse:.2f} vehicles")
+    print(f" R2: {r2:.4f}")
+
+    return {'mae': mae, 'rmse': rmse, 'r2': r2}
+
 
 """
 Main
@@ -150,6 +164,9 @@ Main
 
 def main():
 
+    """
+    Begin Preprocessing the data once it is loaded in
+    """
     # We first need to load the data in for preprocessing
     print("Data is being loaded!")
     df = load_data()
@@ -172,9 +189,22 @@ def main():
     print("Now training Random forest model")
     rf_model = train_random_forest(X_train, y_train)
     rf_pred = predictions(rf_model, X_test)
+    print("Predictions for Random Forest:", rf_pred)
+    print("\n")
+    rf_evaluation = evaluate_model(y_test, rf_pred, model_name= "Random forest")
+    print("Now evaluating results...")
+    print(rf_evaluation)
+
+    
 
     # Train, predict and analyze a logistic regression model
     print("Now training Logistic regression model")
     lr_model = train_logistic_regression(X_train, y_train)
     lr_pred = predictions(lr_model, X_test)
+    print("Predictions for Logistic regression:", lr_pred)
+    print("\n")
+    lr_evaluation = evaluate_model(y_test, lr_pred, model_name= "Logistic regression")
+    print("Now evaluating results...")
+    print(lr_evaluation)
+
     
