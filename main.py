@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import GradientBoostingRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import matplotlib.pyplot as plt
@@ -135,6 +136,19 @@ def train_logistic_regression(X_train, y_train, c_parameter):
 We can add more models to evaluate if we want. Maybe like 1-2 more.
 
 """
+
+"""
+Given the training datasets this function will train our model using gradient boosting regression.
+"""
+def train_gradient_boosting(X_train, y_train):
+
+    gbr = GradientBoostingRegressor(loss='absolute_error',
+                                learning_rate=0.1,
+                                n_estimators=300,
+                                max_depth = 1, 
+                                max_features = 5)
+    gbr.fit(X_train, y_train)
+    return gbr
 
 """
 Based on the model that is passed to the function along with the testing dataset this function should make predictions. 
