@@ -61,23 +61,22 @@ def create_features(df):
     df['is_weekend'] = df['dayofweek'] >= 5
     df['is_rush_hour'] = df['hour'].isin([7,8,9,16,17,18]) & (~df['is_weekend'])
 
-    # Rolling statistics
+    # Rolling statistics with better NaN handling
     rolls = [4, 8, 24]  # last 1h, 2h, 6h
     for window in rolls:
         df[f'vol_roll_mean_{window}'] = df.groupby('SegmentID')['Vol'].transform(
             lambda x: x.rolling(window=window, min_periods=1).mean())
         df[f'vol_roll_std_{window}']  = df.groupby('SegmentID')['Vol'].transform(
-            lambda x: x.rolling(window=window, min_periods=1).std())
+            lambda x: x.rolling(window=window, min_periods=1).std().fillna(0))  # Fill std NaN with 0
         df[f'vol_roll_max_{window}']  = df.groupby('SegmentID')['Vol'].transform(
             lambda x: x.rolling(window=window, min_periods=1).max())
         
     # Location encoding
-    # Ecodes the SegmentID with its average historical volume
+    # Encodes the SegmentID with its average historical volume
     segment_mean = df.groupby('SegmentID')['Vol'].mean()
     df['segment_avg_volume'] = df['SegmentID'].map(segment_mean)
 
-
-    #One-hot for random forest
+    # One-hot encoding
     df = pd.get_dummies(df, columns=['Boro', 'Direction'], drop_first=False)
 
     return df
