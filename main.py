@@ -1,9 +1,10 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, cross_val_score, TimeSeriesSplit
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.tree import GradientBoostingRegressor
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import matplotlib.pyplot as plt
@@ -69,7 +70,7 @@ def create_features(df):
     df['segment_avg_volume'] = df['SegmentID'].map(segment_mean)
 
 
-    #One-hot for random forest
+    # One-hot encode categorical location/direction
     df = pd.get_dummies(df, columns=['Boro', 'Direction'], drop_first=True)
 
     return df
@@ -133,11 +134,6 @@ def train_logistic_regression(X_train, y_train, c_parameter):
     return logreg
 
 """
-We can add more models to evaluate if we want. Maybe like 1-2 more.
-
-"""
-
-"""
 Given the training datasets this function will train our model using gradient boosting regression.
 """
 def train_gradient_boosting(X_train, y_train):
@@ -156,6 +152,57 @@ Based on the model that is passed to the function along with the testing dataset
 def predictions(model, X_test):
 
     return model.predict(X_test)
+
+
+def grid_search_random_forest(X_train, y_train):
+    """Grid-search for RandomForestRegressor with a small search grid."""
+    param_grid = {
+        'n_estimators': [50, 100],
+        'max_depth': [10, 20, None],
+        'min_samples_leaf': [1, 2]
+    }
+
+    rf = RandomForestRegressor(random_state=3)
+    tscv = TimeSeriesSplit(n_splits=5)
+    grid = GridSearchCV(rf, param_grid, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
+    grid.fit(X_train, y_train)
+
+    print(f"RandomForest best params: {grid.best_params_}")
+    print(f"RandomForest best CV MAE: {-grid.best_score_:.2f}")
+
+    return grid.best_estimator_
+
+
+def grid_search_gradient_boosting(X_train, y_train):
+    """Grid-search for GradientBoostingRegressor with a small search grid."""
+    param_grid = {
+        'n_estimators': [50, 100],
+        'learning_rate': [0.05, 0.1],
+        'max_depth': [3, 5]
+    }
+
+    gb = GradientBoostingRegressor(random_state=3)
+    tscv = TimeSeriesSplit(n_splits=5)
+    grid = GridSearchCV(gb, param_grid, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
+    grid.fit(X_train, y_train)
+
+    print(f"GradientBoosting best params: {grid.best_params_}")
+    print(f"GradientBoosting best CV MAE: {-grid.best_score_:.2f}")
+
+    return grid.best_estimator_
+
+
+def cross_val_evaluate(model, X_train, y_train, model_name="Model"):
+    """Evaluate model using TimeSeriesSplit cross-validation and report MAE per fold."""
+    tscv = TimeSeriesSplit(n_splits=5)
+    scores = cross_val_score(model, X_train, y_train, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
+    mae_scores = -scores
+
+    print(f"\n{model_name} Cross-Validation Results:")
+    print(f" MAE per fold: {[f'{s:.2f}' for s in mae_scores]}")
+    print(f" Mean MAE: {mae_scores.mean():.2f} ± {mae_scores.std():.2f}")
+
+    return mae_scores
 
 def evaluate_model(y_test, y_pred, model_name = "Model"):
 
