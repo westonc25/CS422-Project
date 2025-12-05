@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import Ridge
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import matplotlib.pyplot as plt
@@ -121,10 +122,10 @@ the function will train our model using random forest regression
 Different values of C allow us to analayze how regularization is taking place
 
 """
-def train_logistic_regression(X_train, y_train, c_parameter):
+def train_logistic_regression(X_train, y_train, c_parameter=1.0):
 
     #Load the training function
-    logreg = LogisticRegression(c = c_parameter)
+    logreg = LogisticRegression(C = c_parameter, max_iter=1000)
 
     #Train the model with our datasets
     logreg.fit(X_train, y_train)
@@ -132,9 +133,25 @@ def train_logistic_regression(X_train, y_train, c_parameter):
     return logreg
 
 """
-We can add more models to evaluate if we want. Maybe like 1-2 more.
-
+Given the training datasets this function will train our model using gradient boosting regression.
 """
+def train_gradient_boosting(X_train, y_train):
+
+    gbr = GradientBoostingRegressor(loss='absolute_error',
+                                learning_rate=0.1,
+                                n_estimators=300,
+                                max_depth = 1, 
+                                max_features = 5)
+    gbr.fit(X_train, y_train)
+    return gbr
+
+"Given the training datasets this function will train our model using ridge regression."
+def train_ridge_regression(X_train, y_train, alpha=1.0):
+
+    ridge = Ridge(alpha=alpha)
+    ridge.fit(X_train, y_train)
+
+    return ridge
 
 """
 Based on the model that is passed to the function along with the testing dataset this function should make predictions. 
@@ -263,11 +280,10 @@ def main():
     print("Now evaluating results...")
     print(lr_evaluation)
 
+
     # Train, predict and analyze a gradient boosting model
-    from sklearn.ensemble import GradientBoostingRegressor
     print("Now training Gradient Boosting model")
-    gb_model = GradientBoostingRegressor(random_state=3)
-    gb_model.fit(X_train, y_train)
+    gb_model = train_gradient_boosting(X_train, y_train)
     gb_pred = predictions(gb_model, X_test)
     print("Predictions for Gradient Boosting:", gb_pred)
     print("\n")
@@ -275,10 +291,22 @@ def main():
     print("Now evaluating results...")
     print(gb_evaluation)
 
+    # Train, predict and analyze a ridge regression model
+    print("Now training Ridge regression model")
+    ridge_model = train_ridge_regression(X_train, y_train)
+    ridge_pred = predictions(ridge_model, X_test)
+    print("Predictions for Ridge regression:", ridge_pred)
+    print("\n")
+    ridge_evaluation = evaluate_model(y_test, ridge_pred, model_name="Ridge regression")
+    print("Now evaluating results...")
+    print(ridge_evaluation)
+
+
     #Visualize and compare results from each model. n_samples can be set to adjust how many points are plotted
     rf_visual = predictions_visuals(y_test, rf_pred, "Random forest", n_samples = 2000)
     lr_visual = predictions_visuals(y_test, lr_pred, "Logistic regression", n_samples = 2000)
     gb_visual = predictions_visuals(y_test, gb_pred, "Gradient Boosting", n_samples=2000)
+    ridge_visual = predictions_visuals(y_test, ridge_pred, "Ridge regression", n_samples=2000)
 
 if __name__ == "__main__":
     main()
