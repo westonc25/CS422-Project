@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
@@ -8,9 +7,11 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 from datetime import datetime as dt
 
-
+"""
+Load dataset from NYC Traffic volume data and preprocess it.
+"""
 def load_data(file_path):
-    """Load dataset from NYC Traffic volume data and preprocess it."""
+    
     
     "Read the CSV file into the DataFrame"
     df = pd.read_csv(file_path, low_memory=False)
@@ -38,7 +39,12 @@ def load_data(file_path):
     
     return df
 
+"""
+Our dataset will be split into training and testing based on a specific cutoff date.
 
+All data before the cutoff date will be used for training, and all data on or after
+the cutoff date will be used for testing.
+"""
 def split_data_by_date(df):
 
     "The cutoff date for splitting the dataset"
@@ -51,6 +57,29 @@ def split_data_by_date(df):
     return train_df, test_df
 
 
+"""
+********************************************
+*** Time Features and Rolling Statistics ***
+********************************************
+
+Time Features to be created:
+- Hour of Day for date_time
+- Day of Week for date_time
+- Month for date_time
+- Is Weekend
+- Is Rush Hour
+
+Rolling Statistics helps capture recent trends in traffic volume 
+by calculating rolling mean, std, and max over specified windows.
+
+Windows for the rolling statistics:
+- 4 intervals (1 hour)
+- 8 intervals (2 hours)
+- 24 intervals (6 hours)
+
+Info for the rolling statistics based on time features was found
+from: https://www.statology.org/how-to-use-rolling-statistics-for-time-series-analysis-in-python/
+"""
 def create_features(df):
     """Several feature engineering steps to enhance the dataset."""
     
@@ -81,7 +110,9 @@ def create_features(df):
 
     return df
 
-
+"""
+Prepares the data for model training and testing
+"""
 def model_prep(train_df, test_df):
     # Create target: predict NEXT 15-minute interval
     train_df['target'] = train_df.groupby('SegmentID')['Vol'].shift(-1)
@@ -155,7 +186,9 @@ def train_gradient_boosting(X_train, y_train):
     gbr.fit(X_train, y_train)
     return gbr
 
-"Given the training datasets this function will train our model using ridge regression."
+"""
+Given the training datasets this function will train our model using ridge regression.
+"""
 def train_ridge_regression(X_train, y_train, alpha=1.0):
 
     ridge = Ridge(alpha=alpha)
@@ -226,8 +259,9 @@ def predictions_visuals(y_test, y_pred, model_name = "Model", n_samples = 500):
     plt.show() 
     
 
-
-
+"""
+Evaluates the performance of a given model by calculating key metrics.
+"""
 def evaluate_model(y_test, y_pred, model_name = "Model"):
 
     mae = mean_absolute_error(y_test, y_pred)
