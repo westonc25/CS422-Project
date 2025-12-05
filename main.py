@@ -222,6 +222,16 @@ def predictions_visuals(y_test, y_pred, model_name = "Model", n_samples = 500):
                  [y_test.min(), y_test.max()],
                  'r--', lw = 2, label = 'Perfect Prediction')
     
+    # Padding above and below the perfect line
+    padding = 6
+    axes[0].plot([y_test.min(), y_test.max()],
+             [y_test.min() + padding, y_test.max() + padding],
+             'gray', lw=2, linestyle='--', label=f'+{padding} Spread')
+
+    axes[0].plot([y_test.min(), y_test.max()],
+             [y_test.min() - padding, y_test.max() - padding],
+             'gray', lw=2, linestyle='--', label=f'-{padding} Spread')
+    
     #Formatting
     axes[0].set_xlabel('Actual Volume', fontsize = 12)
     axes[0].set_ylabel('Predicted Volume', fontsize = 12)
