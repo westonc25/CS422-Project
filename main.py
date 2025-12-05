@@ -225,7 +225,7 @@ def main():
     """
     # We first need to load the data in for preprocessing
     print("Data is being loaded!")
-    df = load_data()
+    df = load_data('Automated_Traffic_Volume_Counts_20251115.csv')
 
     # Now we can split the data in order to prepare it for training and testing
     print("Data is now being split")
@@ -241,9 +241,9 @@ def main():
     """
     Now that the data has been processed and prepared we can move on to conducting our experiments 
     """
-    # Train, predict and analyze a random forest model
-    print("Now training Random forest model")
-    rf_model = train_random_forest(X_train, y_train)
+    # Train, predict and analyze a random forest model (baseline)
+    print("Now training Random forest baseline (100 trees)")
+    rf_model = train_random_forest(X_train, y_train, trees=100)
     rf_pred = predictions(rf_model, X_test)
     print("Predictions for Random Forest:", rf_pred)
     print("\n")
