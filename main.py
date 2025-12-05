@@ -121,7 +121,16 @@ the function will train our model using random forest regression.
 def train_random_forest(X_train, y_train, trees):
 
     #Load the training function
-    forest = RandomForestRegressor(n_estimators = trees, random_state = 3)
+    forest = RandomForestRegressor(
+        n_estimators=trees, 
+        random_state=3,
+        max_depth=15,        
+        min_samples_split=100,  
+        min_samples_leaf=50,    
+        max_features='sqrt',    
+        n_jobs=-1,             
+        verbose=1              
+    )
 
     #Train the model with our datasets
     forest.fit(X_train, y_train)
@@ -134,12 +143,16 @@ Given the training datasets this function will train our model using gradient bo
 """
 def train_gradient_boosting(X_train, y_train):
 
-    gbr = GradientBoostingRegressor(loss='absolute_error',
-                                learning_rate=0.1,
-                                n_estimators=300,
-                                max_depth = 1, 
-                                max_features = 5,
-                                random_state=3)
+    gbr = GradientBoostingRegressor(
+        loss='absolute_error',
+        learning_rate=0.1,
+        n_estimators=200,       
+        max_depth=3,            
+        max_features=5,
+        subsample=0.8,          
+        random_state=3,
+        verbose=1               
+    )
     gbr.fit(X_train, y_train)
     return gbr
 
@@ -294,6 +307,10 @@ def main():
     print("Data is being loaded!")
     df = load_data('Automated_Traffic_Volume_Counts_20251115.csv')
 
+    print(f"Dataset size: {len(df):,} rows")
+    print(f"Dataset shape: {df.shape}")
+    print(f"Memory usage: {df.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
+
     # Now we can split the data in order to prepare it for training and testing
     print("Data is now being split")
     train_df, test_df = split_data_by_date(df)
@@ -317,6 +334,9 @@ def main():
 
     # Prepare data for model training
     X_train, X_test, y_train, y_test = model_prep(train_df, test_df)
+
+    print(f"Number of features: {X_train.shape[1]}")
+    print(f"Training set size: {X_train.shape[0]:,} rows")
 
     """
     Now that the data has been processed and prepared we can move on to conducting our experiments 
