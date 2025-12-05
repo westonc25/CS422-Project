@@ -13,7 +13,7 @@ def load_data(file_path):
     """Load dataset from NYC Traffic volume data and preprocess it."""
     
     "Read the CSV file into the DataFrame"
-    df = pd.read_csv(file_path)
+    df = pd.read_csv(file_path, low_memory=False)
     
     "Convert to a readable datetime format"
     df['date_time'] = pd.to_datetime(
@@ -23,6 +23,15 @@ def load_data(file_path):
 
     "Keep only relevant columns"
     df = df[['date_time', 'Vol', 'SegmentID', 'Boro', 'Direction', 'street', 'fromSt', 'toSt']].copy()
+
+    # Convert Vol column to numeric, removing commas
+    if df['Vol'].dtype == 'object':  
+        df['Vol'] = df['Vol'].str.replace(',', '', regex=False).astype(float)
+    else:
+        df['Vol'] = pd.to_numeric(df['Vol'], errors='coerce')
+    
+    # Drop any rows where Vol couldn't be converted
+    df = df.dropna(subset=['Vol'])
 
     "Sort chronologically"
     df = df.sort_values(['SegmentID', 'Direction', 'date_time']).reset_index(drop=True)
@@ -69,7 +78,7 @@ def create_features(df):
 
 
     #One-hot for random forest
-    df = pd.get_dummies(df, columns=['Boro', 'Direction'], drop_first=True)
+    df = pd.get_dummies(df, columns=['Boro', 'Direction'], drop_first=False)
 
     return df
 
@@ -86,6 +95,11 @@ def model_prep(train_df, test_df):
     # Define feature columns - FIXED: explicitly exclude string columns
     exclude = ['date_time', 'Vol', 'SegmentID', 'target', 'street', 'fromSt', 'toSt']
     features = [col for col in train_df.columns if col not in exclude]
+
+    # Add missing columns with 0s
+    for col in features:
+        if col not in test_df.columns:
+            test_df[col] = 0
     
     X_train = train_df[features]
     X_test  = test_df[features]
@@ -287,6 +301,19 @@ def main():
     # Apply feature engineering steps in order to enhance the dataset
     train_df = create_features(train_df)
     test_df = create_features(test_df)
+
+    # Get all columns that should be in both datasets
+    train_cols = set(train_df.columns)
+    test_cols = set(test_df.columns)
+
+    # Add missing columns with 0s
+    for col in train_cols - test_cols:
+        test_df[col] = 0
+    for col in test_cols - train_cols:
+        train_df[col] = 0
+
+    # Ensure same column order
+    test_df = test_df[train_df.columns]
 
     # Prepare data for model training
     X_train, X_test, y_train, y_test = model_prep(train_df, test_df)
