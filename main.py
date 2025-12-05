@@ -229,13 +229,22 @@ def predictions_visuals(y_test, y_pred, model_name="Model", n_samples=2000):
     axes[0].set_aspect('equal', adjustable='box')
     
     # Right: time series of the random sample
-    axes[1].plot(idx, y_t, label='Actual', linewidth=1.2)
-    axes[1].plot(idx, y_p, label='Predicted', linewidth=1.2)
-    axes[1].set_xlabel('Time Index (random sample, sorted)')
-    axes[1].set_ylabel('Traffic Volume')
-    axes[1].set_title(f'{model_name}: Time Series View')
+    
+    # Creates an array of time points representing a 15-minute interval
+    sample_indices = range(n_samples)
+    
+    # Plots the actual vs predicted for each time point
+    axes[1].plot(sample_indices, y_test[:n_samples].values,
+                 label = 'Actual', alpha = 0.7, linewidth = 1)
+    axes[1].plot(sample_indices, y_pred[:n_samples],
+                 label = 'Predicted', alpha = 0.7, linewidth = 1)
+    
+    # Formatting
+    axes[1].set_xlabel('Time Index', fontsize = 12)
+    axes[1].set_ylabel('Traffic Volume', fontsize = 12)
+    axes[1].set_title(f'{model_name}: Time Series View', fontsize = 14)
     axes[1].legend()
-    axes[1].grid(alpha=0.3)
+    axes[1].grid(alpha = 0.3)
     
     plt.tight_layout()
     plt.savefig(f'{model_name.lower().replace(" ", "_")}_predictions.png', dpi=300)
@@ -379,9 +388,9 @@ def main():
 
     # Visualize and compare results from each model. n_samples can be set to adjust how many points are plotted
     print("\nGenerating visualizations...")
-    predictions_visuals(y_test, rf_pred, "Random forest", 2000)
-    predictions_visuals(y_test, gb_pred, "Gradient Boosting", 2000)
-    predictions_visuals(y_test, ridge_pred, "Ridge regression", 2000)
+    predictions_visuals(y_test, rf_pred, "Random forest", 500)
+    predictions_visuals(y_test, gb_pred, "Gradient Boosting", 500)
+    predictions_visuals(y_test, ridge_pred, "Ridge regression", 500)
 
     # Visualized model comparison
     plot_model_comparison(evaluations)
