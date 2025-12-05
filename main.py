@@ -263,8 +263,22 @@ def main():
     print("Now evaluating results...")
     print(lr_evaluation)
 
+    # Train, predict and analyze a gradient boosting model
+    from sklearn.ensemble import GradientBoostingRegressor
+    print("Now training Gradient Boosting model")
+    gb_model = GradientBoostingRegressor(random_state=3)
+    gb_model.fit(X_train, y_train)
+    gb_pred = predictions(gb_model, X_test)
+    print("Predictions for Gradient Boosting:", gb_pred)
+    print("\n")
+    gb_evaluation = evaluate_model(y_test, gb_pred, model_name="Gradient Boosting")
+    print("Now evaluating results...")
+    print(gb_evaluation)
+
     #Visualize and compare results from each model. n_samples can be set to adjust how many points are plotted
     rf_visual = predictions_visuals(y_test, rf_pred, "Random forest", n_samples = 2000)
     lr_visual = predictions_visuals(y_test, lr_pred, "Logistic regression", n_samples = 2000)
+    gb_visual = predictions_visuals(y_test, gb_pred, "Gradient Boosting", n_samples=2000)
 
-    
+if __name__ == "__main__":
+    main()
