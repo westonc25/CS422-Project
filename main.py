@@ -174,9 +174,11 @@ def predictions(model, X_test):
 Given the actual vs predicted outcomes this function will also take in the model name and the number of samples we wish 
 to plot and produce visuals comparing the results. 
 """
-def predictions_visuals(y_test, y_pred, model_name = "Model", n_samples = 2000):
+def predictions_visuals(y_test, y_pred, model_name = "Model", n_samples = 500):
 
     fig, axes = plt.subplots(1, 2, figsize = (15, 5))
+    axes[0].set_xlim(0, 100)
+    axes[0].set_ylim(0, 100)
 
     """
     A scatter plot to compare the actual vs predicted outcomes
@@ -360,9 +362,9 @@ def main():
 
     # Visualize and compare results from each model. n_samples can be set to adjust how many points are plotted
     print("\nGenerating visualizations...")
-    rf_visual = predictions_visuals(y_test, rf_pred, "Random forest", n_samples = 2000)
-    gb_visual = predictions_visuals(y_test, gb_pred, "Gradient Boosting", n_samples=2000)
-    ridge_visual = predictions_visuals(y_test, ridge_pred, "Ridge regression", n_samples=2000)
+    predictions_visuals(y_test, rf_pred, "Random forest", 500)
+    predictions_visuals(y_test, gb_pred, "Gradient Boosting", 500)
+    predictions_visuals(y_test, ridge_pred, "Ridge regression", 500)
 
     # Visualized model comparison
     plot_model_comparison(evaluations)
