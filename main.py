@@ -231,6 +231,49 @@ def evaluate_model(y_test, y_pred, model_name = "Model"):
 
 
 """
+Shows the model comparison and the winner based on the evaluation metrics
+"""
+def compare_models(evaluations):
+    """Compare all models side by side"""
+    comparison_df = pd.DataFrame(evaluations).T
+    comparison_df = comparison_df.sort_values('mae')  # Sort by best MAE
+    
+    print("\n" + "="*60)
+    print("MODEL COMPARISON SUMMARY")
+    print("="*60)
+    print(comparison_df.to_string())
+    print("\n")
+    
+    # Identify best model
+    best_model = comparison_df['mae'].idxmin()
+    print(f"🏆 Best Model (Lowest MAE): {best_model}")
+    print(f"   MAE: {comparison_df.loc[best_model, 'mae']:.2f} vehicles")
+    print(f"   R²: {comparison_df.loc[best_model, 'r2']:.4f}")
+    
+    return comparison_df
+
+"""
+Visualize model comparison using bar charts
+"""
+def plot_model_comparison(evaluations):
+    """Visualize model comparison using bar charts"""
+    metrics = ['mae', 'rmse', 'r2']
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    for i, metric in enumerate(metrics):
+        values = [evaluations[model][metric] for model in evaluations]
+        axes[i].bar(evaluations.keys(), values, color='skyblue')
+        axes[i].set_title(f'Model Comparison: {metric.upper()}', fontsize=14)
+        axes[i].set_ylabel(metric.upper(), fontsize=12)
+        axes[i].set_xticklabels(evaluations.keys(), rotation=45, ha='right')
+        axes[i].grid(axis='y', alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig('model_comparison.png', dpi=300)
+    plt.show()
+
+
+"""
 Main
 
 """
@@ -240,6 +283,10 @@ def main():
     """
     Begin Preprocessing the data once it is loaded in
     """
+
+    #Stores the evaluation results for each model
+    evaluations = {}
+
     # We first need to load the data in for preprocessing
     print("Data is being loaded!")
     df = load_data('Automated_Traffic_Volume_Counts_20251115.csv')
@@ -264,9 +311,9 @@ def main():
     rf_pred = predictions(rf_model, X_test)
     print("Predictions for Random Forest:", rf_pred)
     print("\n")
-    rf_evaluation = evaluate_model(y_test, rf_pred, model_name= "Random forest")
+    evaluations['Random Forest'] = evaluate_model(y_test, rf_pred, model_name= "Random forest")
     print("Now evaluating results...")
-    print(rf_evaluation)
+    print(evaluations['Random Forest'])
 
     
 
@@ -276,9 +323,9 @@ def main():
     lr_pred = predictions(lr_model, X_test)
     print("Predictions for Logistic regression:", lr_pred)
     print("\n")
-    lr_evaluation = evaluate_model(y_test, lr_pred, model_name= "Logistic regression")
+    evaluations['Logistic Regression'] = evaluate_model(y_test, lr_pred, model_name= "Logistic regression")
     print("Now evaluating results...")
-    print(lr_evaluation)
+    print(evaluations['Logistic Regression'])
 
 
     # Train, predict and analyze a gradient boosting model
@@ -287,9 +334,9 @@ def main():
     gb_pred = predictions(gb_model, X_test)
     print("Predictions for Gradient Boosting:", gb_pred)
     print("\n")
-    gb_evaluation = evaluate_model(y_test, gb_pred, model_name="Gradient Boosting")
+    evaluations['Gradient Boosting'] = evaluate_model(y_test, gb_pred, model_name="Gradient Boosting")
     print("Now evaluating results...")
-    print(gb_evaluation)
+    print(evaluations['Gradient Boosting'])
 
     # Train, predict and analyze a ridge regression model
     print("Now training Ridge regression model")
@@ -297,9 +344,9 @@ def main():
     ridge_pred = predictions(ridge_model, X_test)
     print("Predictions for Ridge regression:", ridge_pred)
     print("\n")
-    ridge_evaluation = evaluate_model(y_test, ridge_pred, model_name="Ridge regression")
+    evaluations['Ridge Regression'] = evaluate_model(y_test, ridge_pred, model_name="Ridge regression")
     print("Now evaluating results...")
-    print(ridge_evaluation)
+    print(evaluations['Ridge Regression'])
 
 
     #Visualize and compare results from each model. n_samples can be set to adjust how many points are plotted
@@ -307,6 +354,12 @@ def main():
     lr_visual = predictions_visuals(y_test, lr_pred, "Logistic regression", n_samples = 2000)
     gb_visual = predictions_visuals(y_test, gb_pred, "Gradient Boosting", n_samples=2000)
     ridge_visual = predictions_visuals(y_test, ridge_pred, "Ridge regression", n_samples=2000)
+
+    # visualized model comparison
+    plot_model_comparison(evaluations)
+
+    # Compare all models
+    compare_models(evaluations)
 
 if __name__ == "__main__":
     main()
