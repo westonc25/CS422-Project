@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 from datetime import datetime as dt
@@ -84,8 +83,8 @@ def model_prep(train_df, test_df):
     train_df = train_df.dropna(subset=['target'])
     test_df  = test_df.dropna(subset=['target'])
     
-    # Define feature columns
-    exclude = ['date_time', 'Vol', 'SegmentID', 'target']
+    # Define feature columns - FIXED: explicitly exclude string columns
+    exclude = ['date_time', 'Vol', 'SegmentID', 'target', 'street', 'fromSt', 'toSt']
     features = [col for col in train_df.columns if col not in exclude]
     
     X_train = train_df[features]
@@ -115,22 +114,6 @@ def train_random_forest(X_train, y_train, trees):
 
     return forest
 
-"""
-Given the training datasets and a value for the C parameter 
-the function will train our model using random forest regression 
-
-Different values of C allow us to analayze how regularization is taking place
-
-"""
-def train_logistic_regression(X_train, y_train, c_parameter=1.0):
-
-    #Load the training function
-    logreg = LogisticRegression(C = c_parameter, max_iter=1000)
-
-    #Train the model with our datasets
-    logreg.fit(X_train, y_train)
-
-    return logreg
 
 """
 Given the training datasets this function will train our model using gradient boosting regression.
@@ -141,7 +124,8 @@ def train_gradient_boosting(X_train, y_train):
                                 learning_rate=0.1,
                                 n_estimators=300,
                                 max_depth = 1, 
-                                max_features = 5)
+                                max_features = 5,
+                                random_state=3)
     gbr.fit(X_train, y_train)
     return gbr
 
@@ -246,9 +230,9 @@ def compare_models(evaluations):
     
     # Identify best model
     best_model = comparison_df['mae'].idxmin()
-    print(f"🏆 Best Model (Lowest MAE): {best_model}")
-    print(f"   MAE: {comparison_df.loc[best_model, 'mae']:.2f} vehicles")
-    print(f"   R²: {comparison_df.loc[best_model, 'r2']:.4f}")
+    print(f" Best Model (Lowest MAE): {best_model}")
+    print(f" MAE: {comparison_df.loc[best_model, 'mae']:.2f} vehicles")
+    print(f" R²: {comparison_df.loc[best_model, 'r2']:.4f}")
     
     return comparison_df
 
@@ -256,16 +240,21 @@ def compare_models(evaluations):
 Visualize model comparison using bar charts
 """
 def plot_model_comparison(evaluations):
-    """Visualize model comparison using bar charts"""
+    """Visualize model comparison using bar charts - FIXED"""
+    models = list(evaluations.keys())
     metrics = ['mae', 'rmse', 'r2']
+    
+    # Define colors for each model
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'][:len(models)]
+    
     fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
     for i, metric in enumerate(metrics):
-        values = [evaluations[model][metric] for model in evaluations]
-        axes[i].bar(evaluations.keys(), values, color='skyblue')
+        values = [evaluations[model][metric] for model in models]
+        axes[i].bar(models, values, color=colors)
         axes[i].set_title(f'Model Comparison: {metric.upper()}', fontsize=14)
         axes[i].set_ylabel(metric.upper(), fontsize=12)
-        axes[i].set_xticklabels(evaluations.keys(), rotation=45, ha='right')
+        axes[i].tick_params(axis='x', rotation=45)
         axes[i].grid(axis='y', alpha=0.3)
 
     plt.tight_layout()
@@ -306,56 +295,30 @@ def main():
     Now that the data has been processed and prepared we can move on to conducting our experiments 
     """
     # Train, predict and analyze a random forest model (baseline)
-    print("Now training Random forest baseline (100 trees)")
+    print("\nNow training Random forest baseline (100 trees)")
     rf_model = train_random_forest(X_train, y_train, trees=100)
     rf_pred = predictions(rf_model, X_test)
-    print("Predictions for Random Forest:", rf_pred)
-    print("\n")
     evaluations['Random Forest'] = evaluate_model(y_test, rf_pred, model_name= "Random forest")
-    print("Now evaluating results...")
-    print(evaluations['Random Forest'])
-
-    
-
-    # Train, predict and analyze a logistic regression model
-    print("Now training Logistic regression model")
-    lr_model = train_logistic_regression(X_train, y_train)
-    lr_pred = predictions(lr_model, X_test)
-    print("Predictions for Logistic regression:", lr_pred)
-    print("\n")
-    evaluations['Logistic Regression'] = evaluate_model(y_test, lr_pred, model_name= "Logistic regression")
-    print("Now evaluating results...")
-    print(evaluations['Logistic Regression'])
-
 
     # Train, predict and analyze a gradient boosting model
-    print("Now training Gradient Boosting model")
+    print("\nNow training Gradient Boosting model")
     gb_model = train_gradient_boosting(X_train, y_train)
     gb_pred = predictions(gb_model, X_test)
-    print("Predictions for Gradient Boosting:", gb_pred)
-    print("\n")
     evaluations['Gradient Boosting'] = evaluate_model(y_test, gb_pred, model_name="Gradient Boosting")
-    print("Now evaluating results...")
-    print(evaluations['Gradient Boosting'])
 
     # Train, predict and analyze a ridge regression model
-    print("Now training Ridge regression model")
+    print("\nNow training Ridge regression model")
     ridge_model = train_ridge_regression(X_train, y_train)
     ridge_pred = predictions(ridge_model, X_test)
-    print("Predictions for Ridge regression:", ridge_pred)
-    print("\n")
     evaluations['Ridge Regression'] = evaluate_model(y_test, ridge_pred, model_name="Ridge regression")
-    print("Now evaluating results...")
-    print(evaluations['Ridge Regression'])
 
-
-    #Visualize and compare results from each model. n_samples can be set to adjust how many points are plotted
+    # Visualize and compare results from each model. n_samples can be set to adjust how many points are plotted
+    print("\nGenerating visualizations...")
     rf_visual = predictions_visuals(y_test, rf_pred, "Random forest", n_samples = 2000)
-    lr_visual = predictions_visuals(y_test, lr_pred, "Logistic regression", n_samples = 2000)
     gb_visual = predictions_visuals(y_test, gb_pred, "Gradient Boosting", n_samples=2000)
     ridge_visual = predictions_visuals(y_test, ridge_pred, "Ridge regression", n_samples=2000)
 
-    # visualized model comparison
+    # Visualized model comparison
     plot_model_comparison(evaluations)
 
     # Compare all models
