@@ -69,3 +69,8 @@ The program will:
 5. Generates visualization for all of the models
 6. Show a comparison of all the models in the terminal and shows which model is the best
 
+
+## Video Explanation of the Project
+
+https://youtu.be/4uo9QYDzro8 
+
